@@ -15,10 +15,10 @@ local baseClass = {
 	end,
 
 	__newindex = function(self, key, val)
-		if registry.class[self].vars[key].isFinal then
-			error('Cannot modify final variable.')
-		else registry.class[self].vars[key].isPrivate then
+		if registry.class[self].vars[key].isPrivate then
 			error('Cannot access private variable.')
+		else registry.class[self].vars[key].isFinal then
+			error('Cannot modify final variable.')
 		end
 		registry.class[self].vars[key].value = val
 	end,
