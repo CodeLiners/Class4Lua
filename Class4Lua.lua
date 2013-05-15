@@ -2,7 +2,7 @@
 local args = {...}
 local path = args[1]
 
-local registry = setmetatable({ class = {}, object = {}, interface = {}},{__mode='k'})
+local registry = setmetatable({ class = {}, object = {}, interface = {} }, { __mode='k' })
 
 local construct
 
@@ -38,20 +38,7 @@ local baseClass = {
 	__metatable = false
 }
 
-local metamath = {
-	'add',
-	'sub',
-	'mul',
-	'div',
-	'mod',
-	'pow',
-	'unm',
-	'concat',
-	'eq',
-	'lt',
-	'le'
-}
-for k,v in ipairs(metamath) do
+for k,v in ipairs({'add', 'sub', 'mul', 'div', 'mod', 'pow', 'unm', 'concat', 'eq', 'lt', 'le'}) do
 	baseClass['__'..v] = function(self, ...)
 		registry.class[self].meta[v](...)
 	end
