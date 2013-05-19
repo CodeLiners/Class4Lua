@@ -24,7 +24,7 @@ local baseClass = {
 	end,
 
 	__call = function(self, ...)
-		return construct(self)
+		return instantiate(self)
 	end,
 
 	__tostring = function(self)
@@ -42,4 +42,24 @@ for k,v in ipairs({'add', 'sub', 'mul', 'div', 'mod', 'pow', 'unm', 'concat', 'e
 	baseClass['__'..v] = function(self, ...)
 		registry.class[self].meta[v](...)
 	end
+end
+
+local function class(public, final, abstract, static)
+	local class = {}
+	registry.class[class] = {
+		system = {
+			type = "Class",
+			public = public or false,
+			final = final or false,
+			abstract = abstract or false,
+			static = static or false,
+			superClass = false,
+			subClasses = {},
+			interfaces = {},
+			addr = tostring(class)
+		},
+		vars = {},
+		meta = {}
+	}
+	return setmetatable(class,baseClassMt)	
 end
