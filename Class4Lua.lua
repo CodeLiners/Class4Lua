@@ -3,6 +3,7 @@ local args = {...}
 local path = args[1]
 
 local registry = setmetatable({ class = {}, object = {}, interface = {} }, { __mode='k' })
+local classpath = {}
 
 local construct
 
@@ -24,7 +25,7 @@ local baseClass = {
 	end,
 
 	__call = function(self, ...)
-		return instantiate(self)
+		return instantiate(self, ...)
 	end,
 
 	__tostring = function(self)
@@ -44,9 +45,12 @@ for k,v in ipairs({'add', 'sub', 'mul', 'div', 'mod', 'pow', 'unm', 'concat', 'e
 	end
 end
 
-local function class(public, final, abstract, static)
+local function class(qualifiedpath, public, final, abstract, static)
 	local class = {}
 	registry.class[class] = {
+		name = qualifiedpath:match('([^%.]+)$'),
+		package = qualifiedpath:match('(.-)[^%.]+$'):gsub('.$','')
+		qualifiedpath = qualifiedpath
 		system = {
 			type = "Class",
 			public = public or false,
@@ -61,5 +65,15 @@ local function class(public, final, abstract, static)
 		vars = {},
 		meta = {}
 	}
+	local currpkg = classpath
+	for seg in qualifiedpath:gmatch('[^%.]+') do
+		if seg == registry.class[class].name then
+			currpkg[seg] = class
+			break
+		else
+			currpkg[seg] = {}
+			currpkg = currpkg[seg]
+		end
+	end
 	return setmetatable(class,baseClassMt)	
 end
