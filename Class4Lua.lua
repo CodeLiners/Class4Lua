@@ -95,7 +95,7 @@ local function class(qualifiedpath, public, final, abstract, static)
 			addr = tostring(class)
 		},
 		vars = {},
-		meta = {}
+		meta = {}
 	}
 	local currpkg = classpath
 	for seg in qualifiedpath:gmatch('[^%.]+') do
@@ -122,7 +122,7 @@ local function instantiate(class, ...)
 		vars = {
 			toString = {value = baseInstance.__tostring, public = true}
 		},
-		meta = {}
+		meta = {}
 	}
 	local instance = setmetatable(instance, baseInstance)
 	if registry.class[class].constructor then
