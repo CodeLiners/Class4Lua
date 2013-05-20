@@ -2,24 +2,26 @@
 local args = {...}
 local path = args[1]
 
-local registry = setmetatable({ class = {}, object = {}, interface = {} }, { __mode='k' })
+local registry = setmetatable({ class = {}, instance = {} }, { __mode='k' })
 local classpath = {}
 
-local construct
+local instantiate
 
 local baseClass = {
 	__index = function(self, key)
-		if registry.class[self].vars[key].isPrivate then
-			error('Cannot access private variable.')
+		if registry.class[self].vars[key].private then
+			error('Cannot access private variable.', 2)
+		elseif not registry.class[self].vars[key].static then
+			error('Non static method cannot be referenced from a static context.', 2)
 		end
 		return registry.class[self].vars[key].value
 	end,
 
 	__newindex = function(self, key, val)
-		if registry.class[self].vars[key].isPrivate then
-			error('Cannot access private variable.')
-		else registry.class[self].vars[key].isFinal then
-			error('Cannot modify final variable.')
+		if registry.class[self].vars[key].private then
+			error('Cannot access private variable.', 2)
+		elseif registry.class[self].vars[key].final then
+			error('Cannot modify final variable.', 2)
 		end
 		registry.class[self].vars[key].value = val
 	end,
@@ -29,15 +31,45 @@ local baseClass = {
 	end,
 
 	__tostring = function(self)
+		error('Non static method cannot be referenced from a static context.', 2)
+	end,
+
+	__metatable = false
+}
+
+local baseInstance = {
+	__index = function(self, key)
+		if registry.instance[self].vars[key].private then
+			error('Cannot access private variable.')
+		elseif registry.class[self].vars[key].static then
+			return registry.class[registry.instance[self].superClass].vars[key].value
+		end
+		return registry.class[self].vars[key].value
+	end,
+
+	__newindex = function(self, key, val)
+		if registry.class[self].vars[key].private then
+			error('Cannot access private variable.')
+		elseif registry.class[self].vars[key].final then
+			error('Cannot modify final variable.')
+		end
+		registry.class[self].vars[key].value = val
+	end,
+
+	__tostring = function(self)
 		if registry.class[self].meta.tostring then
 			return registry.class[self].meta.tostring()
 		else
-			return 'class: <'..registry.class[self].system.addr..'>'
+			return registry.class[registry.instance[self].superClass].name..'@'..registry.class[self].system.addr
 		end
 	end,
 
 	__metatable = false
 }
+
+local function assert(condition, msg, lvl)
+	if not condition then error(msg, lvl + 1) end
+end
 
 for k,v in ipairs({'add', 'sub', 'mul', 'div', 'mod', 'pow', 'unm', 'concat', 'eq', 'lt', 'le'}) do
 	baseClass['__'..v] = function(self, ...)
@@ -75,5 +107,26 @@ local function class(qualifiedpath, public, final, abstract, static)
 			currpkg = currpkg[seg]
 		end
 	end
-	return setmetatable(class,baseClassMt)	
+	return setmetatable(class,baseClass)
+end
+
+local function instantiate(class, ...)
+	assert(registry.class[self].__system.__abstract, 'Cannot instantiate from abstract class.', 3)
+	local instance = {}
+	registry.instance[instance] = {
+		system = {
+			type = "Instance",
+			superClass = class,
+			addr = tostring(instance)
+		},
+		vars = {
+			toString = {value = baseInstance.__tostring, public = true}
+		},
+		meta = {}
+	}
+	local instance = setmetatable(instance, baseInstance)
+	if registry.class[class].constructor then
+		registry.class[class].constructor(instance, ...)
+	end
+	return instance
 end
