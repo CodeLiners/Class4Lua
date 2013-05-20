@@ -10,18 +10,18 @@ local instantiate
 local baseClass = {
 	__index = function(self, key)
 		if registry.class[self].vars[key].private then
-			error('Cannot access private variable.', 2)
+			error(key..' has private access in '..registry.class[self].name..'.', 2)
 		elseif not registry.class[self].vars[key].static then
-			error('Non static method cannot be referenced from a static context.', 2)
+			error('Non static '..(type(registry.class[self].vars[key].value) == 'function' and 'method' or 'variable')..]' cannot be referenced from a static context.', 2)
 		end
 		return registry.class[self].vars[key].value
 	end,
 
 	__newindex = function(self, key, val)
 		if registry.class[self].vars[key].private then
-			error('Cannot access private variable.', 2)
+			error(key..' has private access in '..registry.class[self].name..'.', 2)
 		elseif registry.class[self].vars[key].final then
-			error('Cannot modify final variable.', 2)
+			error('Cannot assign a value to final variable'..key..'.', 2)
 		end
 		registry.class[self].vars[key].value = val
 	end,
@@ -40,7 +40,7 @@ local baseClass = {
 local baseInstance = {
 	__index = function(self, key)
 		if registry.instance[self].vars[key].private then
-			error('Cannot access private variable.')
+			error(key..' has private access in '..registry.class[registry.instance[self].superClass].name..'.', 2)
 		elseif registry.class[self].vars[key].static then
 			return registry.class[registry.instance[self].superClass].vars[key].value
 		end
@@ -49,9 +49,9 @@ local baseInstance = {
 
 	__newindex = function(self, key, val)
 		if registry.class[self].vars[key].private then
-			error('Cannot access private variable.')
+			error(key..' has private access in '..registry.class[registry.instance[self].superClass].name..'.', 2)
 		elseif registry.class[self].vars[key].final then
-			error('Cannot modify final variable.')
+			error('Cannot assign a value to final variable'..key..'.', 2)
 		end
 		registry.class[self].vars[key].value = val
 	end,
